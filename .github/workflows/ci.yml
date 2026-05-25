@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    name: Guard
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - id: check
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # Skip merge-queue staging branches; Graphite validates the integrated state.
+          if [[ "${HEAD_REF}" == gtmq_merge_* ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  tap-ci:
+    name: Tap CI
+    needs: guard
+    if: needs.guard.outputs.skip != 'true'
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate repository files
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f .github/CODEOWNERS
+
+      - name: Validate formulas
+        run: |
+          if compgen -G "Formula/*.rb" > /dev/null; then
+            ruby -c Formula/*.rb
+            brew audit --strict --online Formula/*.rb
+          else
+            echo "No formulas yet."
+          fi
