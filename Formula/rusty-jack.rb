@@ -1,0 +1,34 @@
+class RustyJack < Formula
+  desc "Route HDMI audio for volume keys and wake Sony-like speakers"
+  homepage "https://github.com/the-hcma/rusty-jack"
+  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/v0.1.1.tar.gz"
+  sha256 "458c938ba23c22be2ea50680d42709e104c7a6f529a0cf2e0cb7b5c1b86f9607"
+  license "MIT"
+  head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
+
+  depends_on macos: :monterey
+  depends_on "rust" => :build
+
+  def install
+    ENV["MACOSX_DEPLOYMENT_TARGET"] = "12.0"
+    system "cargo", "install", *std_cargo_args, "--locked"
+    pkgshare.install "config.example.json", "config.example.sony.json", "launchd"
+  end
+
+  def caveats
+    <<~EOS
+      To create config and install the per-user LaunchAgent:
+        rusty-jack install
+
+      Before uninstalling the formula, stop and remove the LaunchAgent:
+        rusty-jack uninstall --keep-config
+
+      To remove the default config too:
+        rusty-jack uninstall --remove-config
+    EOS
+  end
+
+  test do
+    assert_match "rusty-jack", shell_output("#{bin}/rusty-jack --help")
+  end
+end
