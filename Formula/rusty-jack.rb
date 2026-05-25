@@ -6,8 +6,8 @@ class RustyJack < Formula
   license "MIT"
   head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
 
-  depends_on macos: :monterey
   depends_on "rust" => :build
+  depends_on macos: :monterey
 
   def install
     ENV["MACOSX_DEPLOYMENT_TARGET"] = "12.0"
