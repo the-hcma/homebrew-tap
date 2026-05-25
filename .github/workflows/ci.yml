@@ -43,7 +43,9 @@ jobs:
         run: |
           if compgen -G "Formula/*.rb" > /dev/null; then
             ruby -c Formula/*.rb
-            brew audit --strict --online Formula/*.rb
+            for formula in Formula/*.rb; do
+              brew audit --strict --online "$(basename "${formula}" .rb)"
+            done
           else
             echo "No formulas yet."
           fi
