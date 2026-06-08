@@ -1,8 +1,8 @@
 class RustyJack < Formula
   desc "Route HDMI audio for volume keys and wake ScalarWebAPI-compatible speakers"
   homepage "https://github.com/the-hcma/rusty-jack"
-  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.4.0.tar.gz"
-  sha256 "eb4db06eece603d6e962940e8ce7f1c452e05d5f8b4a31b0410292749cddcf74"
+  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.4.1.tar.gz"
+  sha256 "e1c575d5a6e156118df9dfb187644f45f760489bb8b77dbaba8773466e0117c4"
   license "MIT"
   head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
 
@@ -11,7 +11,7 @@ class RustyJack < Formula
 
   def install
     ENV["MACOSX_DEPLOYMENT_TARGET"] = "12.0"
-    ENV["RUSTY_JACK_GIT_COMMIT"] = "8bcfeb8"
+    ENV["RUSTY_JACK_GIT_COMMIT"] = "9dc370e"
     system "cargo", "install", *std_cargo_args
     system "make", "driver-bundle"
     pkgshare.install "config.example.json", "config.example.scalar-webapi-device.json", "launchd"
