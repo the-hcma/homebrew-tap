@@ -1,8 +1,8 @@
 class RustyJack < Formula
   desc "Route HDMI audio for volume keys and wake ScalarWebAPI-compatible speakers"
   homepage "https://github.com/the-hcma/rusty-jack"
-  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.6.2.tar.gz"
-  sha256 "59cd8ca902a3168b67027e5d764bbe07c23ba6f5a7d098f8c84771ac6ee385db"
+  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.6.3.tar.gz"
+  sha256 "3eff1d89f8395415b57391cf4a461b8acedc7273a39fc5fcbbda9efe8af84b36"
   license "MIT"
   head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
 
@@ -11,7 +11,7 @@ class RustyJack < Formula
 
   def install
     ENV["MACOSX_DEPLOYMENT_TARGET"] = "12.0"
-    ENV["RUSTY_JACK_GIT_COMMIT"] = "724e455"
+    ENV["RUSTY_JACK_GIT_COMMIT"] = "759237a"
     system "cargo", "install", *std_cargo_args
     system "make", "driver-bundle"
     pkgshare.install "config.example.json", "config.example.scalar-webapi-device.json", "launchd"
@@ -46,6 +46,11 @@ class RustyJack < Formula
 
       `status` flags a stale daemon when the running LaunchAgent binary does not
       match the installed CLI version/commit.
+
+      HDMI/DisplayPort keyboard volume: the bundled RustyJack.driver is not
+      Developer ID–signed yet, so macOS usually will not load it. Release builds
+      do not prompt to install it; use eqMac if already installed until signed
+      drivers ship. See docs/DRIVER_SIGNING.md.
 
       Daemon logs: ~/Library/Logs/rusty-jack.log (one file; rotated by the app).
 
