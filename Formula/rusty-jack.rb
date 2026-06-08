@@ -1,8 +1,12 @@
+sed \
+	  -e 's|@ARCHIVE_URL@|https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.2.0.tar.gz|g' \
+	  -e 's|@ARCHIVE_SHA256@|3877edd03b617f8f151fcadef9a9e5df190852199dfc8e1101f1bb30711d3379|g' \
+	  'packaging/homebrew/rusty-jack.formula.in'
 class RustyJack < Formula
-  desc "Route HDMI audio for volume keys and wake Sony-like speakers"
+  desc "Route HDMI audio for volume keys and wake ScalarWebAPI-compatible speakers"
   homepage "https://github.com/the-hcma/rusty-jack"
-  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/v0.1.1.tar.gz"
-  sha256 "458c938ba23c22be2ea50680d42709e104c7a6f529a0cf2e0cb7b5c1b86f9607"
+  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.2.0.tar.gz"
+  sha256 "3877edd03b617f8f151fcadef9a9e5df190852199dfc8e1101f1bb30711d3379"
   license "MIT"
   head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
 
@@ -12,7 +16,13 @@ class RustyJack < Formula
   def install
     ENV["MACOSX_DEPLOYMENT_TARGET"] = "12.0"
     system "cargo", "install", *std_cargo_args, "--locked"
-    pkgshare.install "config.example.json", "config.example.sony.json", "launchd"
+    system "make", "driver-bundle"
+    pkgshare.install "config.example.json", "config.example.scalar-webapi-device.json", "launchd"
+    pkgshare.install "target/share/rusty-jack/RustyJack.driver"
+  end
+
+  def uninstall
+    safe_system bin/"rusty-jack", "disable", "--json"
   end
 
   def caveats
