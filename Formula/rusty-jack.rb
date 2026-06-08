@@ -1,8 +1,8 @@
 class RustyJack < Formula
   desc "Route HDMI audio for volume keys and wake ScalarWebAPI-compatible speakers"
   homepage "https://github.com/the-hcma/rusty-jack"
-  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.5.0.tar.gz"
-  sha256 "520a922727d743eb918e9ceac3eed1e0ee028c1beab4138b3d1882be58c22494"
+  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.6.0.tar.gz"
+  sha256 "cf20540a98e16186cd8a4852e8073e1416b90bdb34af46b3431d325ecdaa86e8"
   license "MIT"
   head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
 
@@ -11,7 +11,7 @@ class RustyJack < Formula
 
   def install
     ENV["MACOSX_DEPLOYMENT_TARGET"] = "12.0"
-    ENV["RUSTY_JACK_GIT_COMMIT"] = "68081b3"
+    ENV["RUSTY_JACK_GIT_COMMIT"] = "f289256"
     system "cargo", "install", *std_cargo_args
     system "make", "driver-bundle"
     pkgshare.install "config.example.json", "config.example.scalar-webapi-device.json", "launchd"
@@ -22,17 +22,32 @@ class RustyJack < Formula
     safe_system bin/"rusty-jack", "disable", "--json"
   end
 
+  def post_install
+    ohai "Refresh the LaunchAgent after every install or upgrade"
+    puts "  rusty-jack upgrade --force"
+    puts
+    puts "Then verify with:"
+    puts "  rusty-jack status"
+    puts
+    puts "First-time setup in each macOS user account:"
+    puts "  rusty-jack install"
+  end
+
   def caveats
     <<~EOS
       After installing the formula, set up config and the per-user LaunchAgent:
         rusty-jack install
 
+      After every `brew install` or `brew upgrade`, refresh the LaunchAgent:
+        rusty-jack upgrade --force
+
       Check routing, daemon state, activity polling, and log path:
         rusty-jack status
 
+      `status` flags a stale daemon when the running LaunchAgent binary does not
+      match the installed CLI version/commit.
+
       Daemon logs: ~/Library/Logs/rusty-jack.log (one file; rotated by the app).
-      After upgrading from older releases, refresh the LaunchAgent once:
-        rusty-jack upgrade --force
 
       Each macOS user who wants auto-routing should run `rusty-jack install`
       in their own account (Homebrew is shared; the LaunchAgent is per-user).
