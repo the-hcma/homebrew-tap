@@ -1,8 +1,8 @@
 class RustyJack < Formula
   desc "Route HDMI audio for volume keys and wake ScalarWebAPI-compatible speakers"
   homepage "https://github.com/the-hcma/rusty-jack"
-  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.2.0.tar.gz"
-  sha256 "3877edd03b617f8f151fcadef9a9e5df190852199dfc8e1101f1bb30711d3379"
+  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.3.0.tar.gz"
+  sha256 "4749cf9788209e2d3b09192d38b2ab83985e5d75d52c93e291eae5e06f4e3dad"
   license "MIT"
   head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
 
@@ -23,8 +23,18 @@ class RustyJack < Formula
 
   def caveats
     <<~EOS
-      To create config and install the per-user LaunchAgent:
+      After installing the formula, set up config and the per-user LaunchAgent:
         rusty-jack install
+
+      Check routing, daemon state, activity polling, and log path:
+        rusty-jack status
+
+      Daemon logs: ~/Library/Logs/rusty-jack.log (one file; rotated by the app).
+      After upgrading from older releases, refresh the LaunchAgent once:
+        rusty-jack upgrade --force
+
+      Each macOS user who wants auto-routing should run `rusty-jack install`
+      in their own account (Homebrew is shared; the LaunchAgent is per-user).
 
       Before uninstalling the formula, stop and remove the LaunchAgent:
         rusty-jack uninstall --keep-config
