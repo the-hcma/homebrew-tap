@@ -1,0 +1,22 @@
+---
+description: Never modify the primary (main) git worktree unless the user explicitly authorizes it
+alwaysApply: true
+---
+
+# Main worktree is off-limits
+
+The **primary clone** at the repo root (first line of `git worktree list`) is the **main worktree**. Do **not** modify it unless the user explicitly authorizes that in the current conversation.
+
+## Do all work on a feature branch worktree
+
+1. Create a branch and worktree under `.worktrees/<branch-name>-wt`.
+2. `cd` into that worktree before any file edits or git writes.
+
+## Forbidden on the main worktree (without explicit user authorization)
+
+- File edits, commits, checkouts, or branch creation
+- Leaving uncommitted changes or stray branches
+
+## Read-only on main is OK
+
+`git log`, `git show`, `gh pr view`, and reading files without writing are fine on the main worktree.
