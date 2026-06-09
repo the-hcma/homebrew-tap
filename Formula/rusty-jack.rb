@@ -1,8 +1,8 @@
 class RustyJack < Formula
   desc "Route HDMI audio for volume keys and wake ScalarWebAPI-compatible speakers"
   homepage "https://github.com/the-hcma/rusty-jack"
-  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.7.0.tar.gz"
-  sha256 "005eef2dab7236664e9acad733822cf55387ac2b272a758b0b1caa9a0f39b176"
+  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.8.0.tar.gz"
+  sha256 "9b5d79ae249916f6344badf332c0ac73f520b5b0433e77a19fac71798c497d32"
   license "MIT"
   head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
 
@@ -11,7 +11,7 @@ class RustyJack < Formula
 
   def install
     ENV["MACOSX_DEPLOYMENT_TARGET"] = "12.0"
-    ENV["RUSTY_JACK_GIT_COMMIT"] = "f6f9b3e"
+    ENV["RUSTY_JACK_GIT_COMMIT"] = "d370531"
     system "cargo", "install", *std_cargo_args
     system "make", "driver-bundle"
     pkgshare.install "config.example.json", "config.example.scalar-webapi-device.json", "launchd"
@@ -47,21 +47,23 @@ class RustyJack < Formula
       `status` flags a stale daemon when the running LaunchAgent binary does not
       match the installed CLI version/commit.
 
-      HDMI/DisplayPort keyboard volume: the bundled RustyJack.driver is not
-      Developer ID–signed yet, so macOS usually will not load it. Release builds
-      do not prompt to install it; use eqMac if already installed until signed
-      drivers ship. See docs/DRIVER_SIGNING.md.
+      HDMI/DisplayPort keyboard volume: when the bundled RustyJack.driver is
+      Developer ID–signed, `install` / `picker` / `upgrade` may offer native
+      driver install. Ad-hoc signed release bundles still need eqMac today; see
+      docs/DRIVER_SIGNING.md.
 
       Daemon logs: ~/Library/Logs/rusty-jack.log (one file; rotated by the app).
 
       Each macOS user who wants auto-routing should run `rusty-jack install`
       in their own account (Homebrew is shared; the LaunchAgent is per-user).
 
-      Before uninstalling the formula, stop and remove the LaunchAgent:
-        rusty-jack uninstall --keep-config
+      `brew uninstall` runs `rusty-jack disable` automatically to stop the LaunchAgent.
 
-      To remove the default config too:
-        rusty-jack uninstall --remove-config
+      For a full per-user cleanup (config + logs + optional driver removal):
+        rusty-jack uninstall --purge
+
+      To keep config but remove logs:
+        rusty-jack uninstall --purge-logs
     EOS
   end
 
