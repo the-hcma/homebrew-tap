@@ -39,6 +39,15 @@ jobs:
           test -f LICENSE
           test -f .github/CODEOWNERS
 
+      - name: Validate README release badge matches formula
+        run: |
+          tag=$(sed -n 's/.*tags\/\(rusty-jack-v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' Formula/rusty-jack.rb | head -1)
+          version="${tag#rusty-jack-}"
+          grep -qF "rusty--jack-${version}-blue" README.md || {
+            echo "README release badge must show ${version} (from Formula/rusty-jack.rb tag ${tag})"
+            exit 1
+          }
+
       - name: Validate formulas
         run: |
           if compgen -G "Formula/*.rb" > /dev/null; then
