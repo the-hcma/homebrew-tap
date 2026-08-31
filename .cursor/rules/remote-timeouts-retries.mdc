@@ -54,12 +54,21 @@ end
 ```
 
 ```bash
-# good — explicit timeout + bounded, backed-off retry
+# good — explicit timeout, status classification, jittered bounded retry.
+# No `-f`: it collapses every HTTP >=400 to exit 22, so a retryable 429/503 is
+# indistinguishable from a permanent 404. Capture %{http_code} and classify it.
 attempts=0 max_attempts=4 backoff=2
-until curl -fsSL --connect-timeout 5 --max-time 120 -o "$out" "$url"; do
-  rc=$?; case "$rc" in 7|28|56) : ;; *) echo "ERROR: curl rc=$rc (permanent)"; exit 1 ;; esac
+transient=' 408 429 502 503 504 '
+while :; do
+  if code=$(curl -sSL --connect-timeout 5 --max-time 120 \
+        -o "$out" -w '%{http_code}' "$url"); then
+    [[ "$code" == 2* ]] && break                                    # done
+    [[ "$transient" != *" $code "* ]] && { echo "ERROR: HTTP $code (permanent)"; exit 1; }
+  else
+    rc=$?; case "$rc" in 7|28|56) : ;; *) echo "ERROR: curl rc=$rc (permanent)"; exit 1 ;; esac
+  fi
   attempts=$((attempts + 1))
   (( attempts >= max_attempts )) && { echo "ERROR: download retries exhausted"; exit 1; }
-  sleep "$backoff"; backoff=$((backoff * 2))
+  sleep $(( backoff + RANDOM % backoff )); backoff=$(( backoff * 2 ))   # jitter
 done
 ```
