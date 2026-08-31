@@ -24,3 +24,15 @@ The **primary clone** (repo root — first entry in `git worktree list`, usually
 
 - All changes go through pull requests; do not push directly to `main`.
 - Keep commits focused and GPG-signed when the repository requires it.
+
+---
+
+## Remote I/O
+
+- **Remote timeouts and bounded retries:** `.cursor/rules/remote-timeouts-retries.mdc`
+  (`alwaysApply`, org rule — template sync
+  [repository-helpers#570](https://github.com/the-hcma/repository-helpers/issues/570)).
+  Most network I/O is Homebrew's own (`url` download, `cargo install`) and stays
+  as-is; anything we add — custom `curl` in a formula, release automation, CI
+  helpers — uses explicit `--max-time` / `--connect-timeout`, bounded backed-off
+  transient-only retries, and never re-sends a non-idempotent write.

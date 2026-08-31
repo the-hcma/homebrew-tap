@@ -1,0 +1,74 @@
+---
+description: All remote/network I/O must use explicit timeouts and bounded retries
+alwaysApply: true
+---
+
+# Remote timeouts and retries
+
+This tap's network I/O is mostly Homebrew's own: the `url` / `sha256` source
+download and `system "cargo", "install", …` (cargo fetching crates). Homebrew
+already bounds its downloads (`HOMEBREW_CURL_RETRIES`, connect timeout) — do not
+fight it. This rule is a **guardrail** for anything *we* add: custom Ruby in a
+formula (`system "curl" …`, `Utils::Curl`, extra `resource` blocks), release
+automation, and `gh`/`curl` helpers in CI. Org template sync:
+repository-helpers#570.
+
+## Timeouts (required)
+
+- Any `curl` we invoke (a formula `system` call, a CI script) passes an
+  **explicit timeout**: `--max-time` and `--connect-timeout`. Never a bare
+  `curl <url>`. Prefer `Utils::Curl` / Homebrew's download strategies, which
+  carry finite defaults, over a hand-rolled fetch.
+- `gh` / API calls in release automation honor documented rate-limit / cooldown
+  waits rather than spinning.
+- Agent / shell wrappers that hit the network should use the helpers'
+  `--timeout` / `run_command … --timeout` patterns when available.
+
+## Retries (required when retrying)
+
+- Retry only **transient** failures: `curl` exit `28` / `7` / `56`, and HTTP
+  `408`, `429`, `502`, `503`, `504`. A `403` / `404` (bad tag, missing asset) is
+  **permanent** — fail fast, do not retry.
+- Cap attempts (small fixed `N`, 2–5) **or** a total retry budget. Never wrap a
+  download in an **unbounded** retry loop.
+- Back off between attempts (exponential with jitter). Honor `Retry-After` when
+  the peer sends it, clamped to a ceiling.
+- Do **not** retry a non-idempotent write — a GitHub release publish, a tag
+  push, a `gh api -X POST` — unless it is safe to re-send (idempotency key).
+  Idempotent reads (fetching a tarball, `gh api` GET) are safe to retry in
+  budget.
+- Surface a clear timeout / retry-exhaustion error and exit non-zero — never
+  spin silently.
+
+## Anti-patterns
+
+```ruby
+# bad — no timeout in a formula's custom fetch
+system "curl", "-L", "-o", "payload.tar.gz", url
+
+# bad — unbounded retry in release automation
+while true
+  break if system("gh", "release", "upload", tag, asset)
+  sleep 5
+end
+```
+
+```bash
+# good — explicit timeout, status classification, jittered bounded retry.
+# No `-f`: it collapses every HTTP >=400 to exit 22, so a retryable 429/503 is
+# indistinguishable from a permanent 404. Capture %{http_code} and classify it.
+attempts=0 max_attempts=4 backoff=2
+transient=' 408 429 502 503 504 '
+while :; do
+  if code=$(curl -sSL --connect-timeout 5 --max-time 120 \
+        -o "$out" -w '%{http_code}' "$url"); then
+    [[ "$code" == 2* ]] && break                                    # done
+    [[ "$transient" != *" $code "* ]] && { echo "ERROR: HTTP $code (permanent)"; exit 1; }
+  else
+    rc=$?; case "$rc" in 7|28|56) : ;; *) echo "ERROR: curl rc=$rc (permanent)"; exit 1 ;; esac
+  fi
+  attempts=$((attempts + 1))
+  (( attempts >= max_attempts )) && { echo "ERROR: download retries exhausted"; exit 1; }
+  sleep $(( backoff + RANDOM % backoff )); backoff=$(( backoff * 2 ))   # jitter
+done
+```
