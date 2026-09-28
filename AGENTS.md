@@ -7,6 +7,7 @@ This file defines the non-negotiable standards for all contributors (human or AI
 ## Session startup
 
 - At the **start of every agent session**, before acting from assumed conventions, read this `AGENTS.md` in full, then read every `alwaysApply: true` rule under `.cursor/rules/*.mdc` (plus any whose `globs` match files you will touch) — `AGENTS.md` and `.cursor/rules/` together are the contract. `CLAUDE.md` (a `@AGENTS.md` import) and `.github/copilot-instructions.md` are thin shims so Claude Code and Copilot reach the same guidance.
+- Markdown files you commit, this one included, use one physical line per paragraph, list item and blockquote, with no hard line breaks (see `.agents/rules/github-content-formatting.md`).
 
 ---
 
@@ -35,10 +36,4 @@ The **primary clone** (repo root — first entry in `git worktree list`, usually
 
 ## Remote I/O
 
-- **Remote timeouts and bounded retries:** `.cursor/rules/remote-timeouts-retries.mdc`
-  (`alwaysApply`, org rule — template sync
-  [repository-helpers#570](https://github.com/the-hcma/repository-helpers/issues/570)).
-  Most network I/O is Homebrew's own (`url` download, `cargo install`) and stays
-  as-is; anything we add — custom `curl` in a formula, release automation, CI
-  helpers — uses explicit `--max-time` / `--connect-timeout`, bounded backed-off
-  transient-only retries, and never re-sends a non-idempotent write.
+- **Remote timeouts and bounded retries:** `.cursor/rules/remote-timeouts-retries.mdc` (`alwaysApply`, org rule — template sync [repository-helpers#570](https://github.com/the-hcma/repository-helpers/issues/570)). Most network I/O is Homebrew's own (`url` download, `cargo install`) and stays as-is; anything we add — custom `curl` in a formula, release automation, CI helpers — uses explicit `--max-time` / `--connect-timeout`, bounded backed-off transient-only retries, and never re-sends a non-idempotent write.
