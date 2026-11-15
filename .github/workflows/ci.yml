@@ -72,7 +72,7 @@ jobs:
     name: Tap CI
     needs: guard
     if: needs.guard.outputs.skip != 'true'
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -96,6 +96,8 @@ jobs:
           if compgen -G "Formula/*.rb" > /dev/null; then
             ruby -c Formula/*.rb
             brew tap the-hcma/tap "$PWD"
+            # Newer Homebrew refuses to load formulae from an untrusted tap; this tap is the checkout under test.
+            brew trust the-hcma/tap
             for formula in Formula/*.rb; do
               brew audit --strict --online "the-hcma/tap/$(basename "${formula}" .rb)"
             done
