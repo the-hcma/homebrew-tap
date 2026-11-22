@@ -1,8 +1,8 @@
 class RustyJack < Formula
   desc "Route HDMI audio for volume keys and wake ScalarWebAPI-compatible speakers"
   homepage "https://github.com/the-hcma/rusty-jack"
-  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.12.1.tar.gz"
-  sha256 "a5ccba0eb7ecf092d2e7d4746d03d845220d1f4053274ca346ab1461d3fe46df"
+  url "https://github.com/the-hcma/rusty-jack/archive/refs/tags/rusty-jack-v0.13.0.tar.gz"
+  sha256 "dfe4ca11374cc317620c21574869eeb14ddf1197c4159f0caeb7a922fbf7e69f"
   license "MIT"
   head "https://github.com/the-hcma/rusty-jack.git", branch: "main"
 
@@ -11,8 +11,9 @@ class RustyJack < Formula
 
   def install
     ENV["MACOSX_DEPLOYMENT_TARGET"] = "12.0"
-    ENV["RUSTY_JACK_GIT_COMMIT"] = "9597053"
+    ENV["RUSTY_JACK_GIT_COMMIT"] = "ba05438"
     system "cargo", "install", *std_cargo_args
+    generate_completions_from_executable(bin/"rusty-jack", "completions")
     system "make", "driver-bundle"
     pkgshare.install "config.example.json", "config.example.scalar-webapi-device.json", "launchd"
     pkgshare.install "target/share/rusty-jack/RustyJack.driver"
@@ -32,6 +33,10 @@ class RustyJack < Formula
 
       Check routing, daemon state, activity polling, and log path:
         rusty-jack status
+
+      If keyboard/mouse wake or speaker discovery is not working, check the
+      macOS privacy permissions (Accessibility, Local Network) with:
+        rusty-jack doctor
 
       `status` flags a stale daemon when the running LaunchAgent binary does not
       match the installed CLI version/commit.
